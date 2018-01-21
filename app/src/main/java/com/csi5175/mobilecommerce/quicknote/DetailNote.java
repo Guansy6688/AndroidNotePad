@@ -13,6 +13,11 @@ import android.widget.TextView;
 
 public class DetailNote extends AppCompatActivity {
 
+    public static final String TITLE = "title";
+    public static final String CONTENT = "content";
+    public static final String PATH = "path";
+    public static final String TIME = "time";
+
     TextView title;
     TextView time;
     TextView context;
@@ -28,11 +33,11 @@ public class DetailNote extends AppCompatActivity {
         context = (TextView)findViewById(R.id.textView10);
 
         Intent i = getIntent();
-        String titlec = i.getStringExtra("title");
-        String timec = i.getStringExtra("time");
-        String contextc = i.getStringExtra("context");
+        String titlec = i.getStringExtra(TITLE);
+        String timec = i.getStringExtra(TIME);
+        String contextc = i.getStringExtra(CONTENT);
         //for the picture
-        String pathc = i.getStringExtra("path");
+        String pathc = i.getStringExtra(PATH);
 
         title.setText(titlec);
         time.setText(timec);

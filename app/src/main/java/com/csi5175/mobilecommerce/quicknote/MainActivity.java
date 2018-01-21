@@ -67,11 +67,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 // Toast.makeText(getApplicationContext(),"aaaa",Toast.LENGTH_SHORT).show();
-                Intent i = new Intent(getApplicationContext(),DetailNote.class);
-                i.putExtra("title",c.getString(1));
-                i.putExtra("time",c.getString(2));
-                i.putExtra("context",c.getString(3));
-                i.putExtra("path",c.getString(4));
+                Intent i = new Intent(getApplicationContext(), AddNote.class);
+                i.putExtra(ID, c.getString(0));
+                i.putExtra(TITLE, c.getString(1));
+                i.putExtra(TIME, c.getString(2));
+                i.putExtra(CONTENT, c.getString(3));
+                i.putExtra(PATH, c.getString(4));
                 startActivity(i);
             }
         });
