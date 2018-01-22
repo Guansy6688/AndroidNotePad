@@ -4,15 +4,24 @@ import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -25,7 +34,10 @@ public class AddNote extends AppCompatActivity {
     EditText context;
     Button save;
     TextView date;
+    ImageView img;
+    ImageButton imgbtn;
     Button back;
+    File phoneFile;
 
 
     private static final String DATABASE_NAME = "Mydb";
@@ -60,6 +72,7 @@ public class AddNote extends AppCompatActivity {
         date=(TextView)findViewById(R.id.textView);
         title = (EditText)findViewById(R.id.editText6);
         context=(EditText)findViewById(R.id.editText7);
+        img = (ImageView)findViewById(R.id.imageView1) ;
         save = (Button)findViewById(R.id.button5);
 
         Intent i = getIntent();
@@ -70,26 +83,36 @@ public class AddNote extends AppCompatActivity {
             String titleString = i.getStringExtra(TITLE);
 //    String timec = i.getStringExtra(TIME);
             String contextString = i.getStringExtra(CONTENT);
-
             title.setText(titleString);
             context.setText(contextString);
+
+            if (i.getStringExtra(PATH).equals("null")) {
+                img.setVisibility(View.GONE);
+            } else {
+                img.setVisibility(View.VISIBLE);
+                Bitmap bitmap = BitmapFactory.decodeFile(i.getStringExtra(
+                        PATH));
+                img.setImageBitmap(bitmap);
+            }
         }
 
-        //get Time
-        long time=System.currentTimeMillis();
-        SimpleDateFormat format=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        Date d1=new Date(time);
-        String t=format.format(d1);
-        date.setText(t);
+        date.setText(getTime());
  //       Toast.makeText(getApplicationContext(),t,Toast.LENGTH_SHORT).show();
 
 
 
-        //title.getText()
-        //date.getText()
-        //context.getText()
-        //weather.getText()
-
+        imgbtn = (ImageButton)findViewById(R.id.imageButton3);
+        imgbtn.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                img.setVisibility(View.VISIBLE);
+                Intent imgIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                phoneFile = new File(Environment.getExternalStorageDirectory()
+                        .getAbsoluteFile() + "/" + getTime() + ".jpg");
+                imgIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(phoneFile));
+                startActivityForResult(imgIntent, 1);
+            }
+        });
 
 
 
@@ -111,11 +134,12 @@ public class AddNote extends AppCompatActivity {
                     String timeString = date.getText().toString();
                     String contextString = context.getText().toString();
 
-                    //title text  ,weather text ,time text, context text
+                    //title text ,time text, context text
                     ContentValues cv = new ContentValues();
                     cv.put(TITLE, titleString);
                     cv.put(TIME, timeString);
                     cv.put(CONTENT, contextString);
+                    cv.put(PATH, phoneFile + "");
 
                     if(idString==null) {
                         sqlDB.insertOrThrow(TABLE_NAME,null,cv);
@@ -133,5 +157,25 @@ public class AddNote extends AppCompatActivity {
 
             }
         });
+    }
+
+    private String getTime() {
+        //get Time
+        long time=System.currentTimeMillis();
+        SimpleDateFormat format=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date d1=new Date(time);
+        String t=format.format(d1);
+        return t;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 1) {
+            Bitmap bitmap = BitmapFactory.decodeFile(phoneFile
+                    .getAbsolutePath());
+            img.setImageBitmap(bitmap);
+        }
     }
 }

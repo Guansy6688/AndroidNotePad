@@ -107,8 +107,10 @@ public class MainActivity extends AppCompatActivity {
                         //Toast.makeText(getApplicationContext(),"ok",Toast.LENGTH_SHORT).show();
 
                         c.moveToPosition(position);
-                        String title_name = c.getString(1);
-                        sqlDB.delete(TABLE_NAME,"title=?",new String[]{title_name});
+                        String id = c.getString(0);
+                        if(!id.equals("")) {
+                            sqlDB.delete(TABLE_NAME, ID + "=" + id, null);
+                        }
                         Intent i=new Intent(getApplicationContext(),MainActivity.class);
                         startActivity(i);
                     }
