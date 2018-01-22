@@ -7,8 +7,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -86,7 +88,7 @@ public class AddNote extends AppCompatActivity {
             title.setText(titleString);
             context.setText(contextString);
 
-            if (i.getStringExtra(PATH).equals("null")) {
+            if (i.getStringExtra(PATH)==null) {
                 img.setVisibility(View.GONE);
             } else {
                 img.setVisibility(View.VISIBLE);
@@ -106,13 +108,22 @@ public class AddNote extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 img.setVisibility(View.VISIBLE);
+
+
                 Intent imgIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+                String filename = getTime()+ ".jpg";
                 phoneFile = new File(Environment.getExternalStorageDirectory()
-                        .getAbsoluteFile() + "/" + getTime() + ".jpg");
-                imgIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(phoneFile));
+                        ,filename);
+
+                Uri photoUri = FileProvider7.getUriForFile(getApplicationContext(), phoneFile);
+                imgIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+
+                // imgIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(phoneFile));
                 startActivityForResult(imgIntent, 1);
             }
         });
+
 
 
 
@@ -139,7 +150,7 @@ public class AddNote extends AppCompatActivity {
                     cv.put(TITLE, titleString);
                     cv.put(TIME, timeString);
                     cv.put(CONTENT, contextString);
-                    cv.put(PATH, phoneFile + "");
+                    cv.put(PATH, phoneFile+"");
 
                     if(idString==null) {
                         sqlDB.insertOrThrow(TABLE_NAME,null,cv);
