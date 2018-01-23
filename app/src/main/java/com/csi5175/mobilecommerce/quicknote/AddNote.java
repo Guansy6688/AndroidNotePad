@@ -3,14 +3,14 @@ package com.csi5175.mobilecommerce.quicknote;
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -26,6 +26,7 @@ import android.widget.Toast;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by Administrator on 1/16/2018.
@@ -109,21 +110,39 @@ public class AddNote extends AppCompatActivity {
             public void onClick(View v) {
                 img.setVisibility(View.VISIBLE);
 
+                //                Intent imgIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+//                phoneFile = new File(Environment.getExternalStorageDirectory()
+//                        .getAbsoluteFile() + "/" + getTime() + ".jpg");
+//                imgIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(phoneFile));
+//                startActivityForResult(imgIntent, 1);
 
                 Intent imgIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-                String filename = getTime()+ ".jpg";
-                phoneFile = new File(Environment.getExternalStorageDirectory()
-                        ,filename);
+                if (imgIntent.resolveActivity(getPackageManager()) != null) {
 
-                Uri photoUri = FileProvider7.getUriForFile(getApplicationContext(), phoneFile);
-                imgIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+                    String filename = getTime() + ".jpg";
+                    phoneFile= new File(Environment.getExternalStorageDirectory(), filename);
 
-                // imgIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(phoneFile));
-                startActivityForResult(imgIntent, 1);
+                    Uri fileUri = FileProvider7.getUriForFile(getApplicationContext(), phoneFile);
+
+                    List<ResolveInfo> resInfoList = getPackageManager()
+                            .queryIntentActivities(imgIntent, PackageManager.MATCH_DEFAULT_ONLY);
+                    for (ResolveInfo resolveInfo : resInfoList) {
+                        String packageName = resolveInfo.activityInfo.packageName;
+                        grantUriPermission(packageName, fileUri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                    }
+
+                    Toast.makeText(getApplicationContext(),fileUri.getPath(),Toast.LENGTH_SHORT).show();
+
+                    imgIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
+                    startActivityForResult(imgIntent, 1);
+                }
+
+
+
             }
         });
-
 
 
 
@@ -150,7 +169,7 @@ public class AddNote extends AppCompatActivity {
                     cv.put(TITLE, titleString);
                     cv.put(TIME, timeString);
                     cv.put(CONTENT, contextString);
-                    cv.put(PATH, phoneFile+"");
+                    cv.put(PATH, phoneFile + "");
 
                     if(idString==null) {
                         sqlDB.insertOrThrow(TABLE_NAME,null,cv);
@@ -173,7 +192,7 @@ public class AddNote extends AppCompatActivity {
     private String getTime() {
         //get Time
         long time=System.currentTimeMillis();
-        SimpleDateFormat format=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat format=new SimpleDateFormat("yyyyMMdd-HHmmss");
         Date d1=new Date(time);
         String t=format.format(d1);
         return t;
@@ -184,6 +203,8 @@ public class AddNote extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == 1) {
+            Toast.makeText(getApplicationContext(),phoneFile.getAbsolutePath(),Toast.LENGTH_SHORT).show();
+
             Bitmap bitmap = BitmapFactory.decodeFile(phoneFile
                     .getAbsolutePath());
             img.setImageBitmap(bitmap);
