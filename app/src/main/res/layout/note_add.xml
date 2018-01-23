@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
 
     <EditText
@@ -63,18 +64,17 @@
         android:layout_height="70dp"
         android:layout_above="@+id/button5"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="18dp"
-        android:scaleType="fitCenter"
         android:background="#00000000"
+        android:scaleType="fitCenter"
         app:srcCompat="@mipmap/camera_icon" />
 
     <ImageView
         android:id="@+id/imageView1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignEnd="@+id/textView"
-        android:layout_alignRight="@+id/textView"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
         android:layout_below="@+id/editText7"
-        android:layout_marginTop="51dp" />
+        android:layout_marginTop="15dp"
+        android:layout_centerHorizontal="true"
+        android:scaleType="fitXY" />
 
 </RelativeLayout>
