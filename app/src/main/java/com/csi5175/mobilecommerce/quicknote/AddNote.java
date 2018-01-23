@@ -1,6 +1,8 @@
 package com.csi5175.mobilecommerce.quicknote;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -11,6 +13,8 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -24,6 +28,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -41,6 +46,7 @@ public class AddNote extends AppCompatActivity {
     ImageButton imgbtn;
     Button back;
     File phoneFile;
+    Uri uri;
 
 
     private static final String DATABASE_NAME = "Mydb";
@@ -110,36 +116,29 @@ public class AddNote extends AppCompatActivity {
             public void onClick(View v) {
                 img.setVisibility(View.VISIBLE);
 
-                //                Intent imgIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-//                phoneFile = new File(Environment.getExternalStorageDirectory()
-//                        .getAbsoluteFile() + "/" + getTime() + ".jpg");
-//                imgIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(phoneFile));
-//                startActivityForResult(imgIntent, 1);
+                                Intent imgIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                phoneFile = new File(Environment.getExternalStorageDirectory()
+                        .getAbsoluteFile() + "/" + getImgTime() + ".jpg");
+              //  imgIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(phoneFile));
+                ContentValues contentValues = new ContentValues(1);
+                contentValues.put(MediaStore.Images.Media.DATA, phoneFile.getAbsolutePath());
 
-                Intent imgIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-
-                if (imgIntent.resolveActivity(getPackageManager()) != null) {
-
-                    String filename = getTime() + ".jpg";
-                    phoneFile= new File(Environment.getExternalStorageDirectory(), filename);
-
-                    Uri fileUri = FileProvider7.getUriForFile(getApplicationContext(), phoneFile);
-
-                    List<ResolveInfo> resInfoList = getPackageManager()
-                            .queryIntentActivities(imgIntent, PackageManager.MATCH_DEFAULT_ONLY);
-                    for (ResolveInfo resolveInfo : resInfoList) {
-                        String packageName = resolveInfo.activityInfo.packageName;
-                        grantUriPermission(packageName, fileUri, Intent.FLAG_GRANT_READ_URI_PERMISSION
-                                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                    }
-
-                    Toast.makeText(getApplicationContext(),fileUri.getPath(),Toast.LENGTH_SHORT).show();
-
-                    imgIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
-                    startActivityForResult(imgIntent, 1);
+                if(ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+                        PackageManager.PERMISSION_GRANTED){
+                    ActivityCompat.requestPermissions(AddNote.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
                 }
 
 
+                 uri = getApplication().getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
+                                    List<ResolveInfo> resInfoList = getPackageManager()
+                            .queryIntentActivities(imgIntent, PackageManager.MATCH_DEFAULT_ONLY);
+                    for (ResolveInfo resolveInfo : resInfoList) {
+                        String packageName = resolveInfo.activityInfo.packageName;
+                        grantUriPermission(packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                    }
+                imgIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+                startActivityForResult(imgIntent, 1);
 
             }
         });
@@ -191,6 +190,15 @@ public class AddNote extends AppCompatActivity {
 
     private String getTime() {
         //get Time
+        long time=System.currentTimeMillis();
+        SimpleDateFormat format=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date d1=new Date(time);
+        String t=format.format(d1);
+        return t;
+    }
+
+    private String getImgTime() {
+        //get Img Time
         long time=System.currentTimeMillis();
         SimpleDateFormat format=new SimpleDateFormat("yyyyMMdd-HHmmss");
         Date d1=new Date(time);
