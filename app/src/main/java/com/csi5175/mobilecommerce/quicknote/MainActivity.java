@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -15,9 +16,25 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 
+import com.facebook.share.model.ShareLinkContent;
+//import com.facebook.CallbackManager;
+//import com.facebook.FacebookCallback;
+//import com.facebook.FacebookException;
+import com.facebook.FacebookSdk;
+import com.facebook.appevents.AppEventsLogger;
+//import com.facebook.login.LoginResult;
+//import com.facebook.login.widget.LoginButton;
+import com.facebook.share.widget.ShareButton;
+import com.facebook.share.widget.ShareDialog;
+
+
 public class MainActivity extends AppCompatActivity {
     ImageButton add;
     public ListView listView;
+//    LoginButton fbLoginButton;
+//    ShareButton fbShareButton;
+    ShareDialog fbShareDialog;
+//    CallbackManager fbCallbackManager;
     private static final String DATABASE_NAME = "Mydb";
     private static final String TABLE_NAME = "notes";
     public static final String ID = "_id";
@@ -32,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        FacebookSdk.sdkInitialize(getApplicationContext());
+        AppEventsLogger.activateApp(this);
 
         sqlDB = openOrCreateDatabase(DATABASE_NAME, SQLiteDatabase.CREATE_IF_NECESSARY,null);
         //Toast.makeText(getApplicationContext(),"db open successfully",Toast.LENGTH_SHORT).show();
@@ -62,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
         listView.invalidateViews();
 
 
-        //enter note detail page
+        //enter add note page
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -77,9 +96,39 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+//        // Facebook Login on QuickNote
+//        fbCallbackManager = CallbackManager.Factory.create();
+//        fbLoginButton = (LoginButton) findViewById(R.id.login_button);
+//        fbLoginButton.setReadPermissions("email, publish_actions");
+//        fbLoginButton.registerCallback(fbCallbackManager,
+//                new FacebookCallback<LoginResult>() {
+//                    @Override
+//                    public void onSuccess(LoginResult loginResult) {
+//                        // App code
+//                    }
+//
+//                    @Override
+//                    public void onCancel() {
+//                        // App code
+//                    }
+//
+//                    @Override
+//                    public void onError(FacebookException exception) {
+//                        // App code
+//                    }
+//                });
+//
+//        // Facebook Share on QuickNote
+//        fbShareButton = (ShareButton) findViewById(R.id.share_button);
+//        fbShareDialog = new ShareDialog(this);
+//        fbShareButton.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View v) {
+//
+//            }
+//        });
 
-
-
+        fbShareDialog = new ShareDialog(this);
 
         //long click to delete
         listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
@@ -88,33 +137,53 @@ public class MainActivity extends AppCompatActivity {
 
                 //Toast.makeText(getApplicationContext(),"Longpress",Toast.LENGTH_SHORT).show();
 
+                final CharSequence[] optionList = {"Share on Facebook", "Delete"};
+
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-
-                builder.setTitle("Prompt");
-                builder.setMessage("Do you want to delete?");
-
-                builder.setNegativeButton("Cancel",new DialogInterface.OnClickListener(){
-                    public void onClick (DialogInterface arg0,int arg1)
-                    {
-                        // Toast.makeText(getApplicationContext(),"cancel",Toast.LENGTH_SHORT).show();
-                    }
-
-                });
-
-                builder.setPositiveButton("OK",new DialogInterface.OnClickListener(){
-                    public void onClick(DialogInterface arg0,int arg1)
-                    {
-                        //Toast.makeText(getApplicationContext(),"ok",Toast.LENGTH_SHORT).show();
-
-                        c.moveToPosition(position);
-                        String id = c.getString(0);
-                        if(!id.equals("")) {
-                            sqlDB.delete(TABLE_NAME, ID + "=" + id, null);
+                builder.setTitle("Options");
+                builder.setItems(optionList, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        if(optionList[i].equals("Share on Facebook")) {
+                            if(fbShareDialog.canShow(ShareLinkContent.class)) {
+                                ShareLinkContent linkContent = new ShareLinkContent.Builder()
+                                        .setContentTitle(c.getString(1))
+                                        .setContentDescription(c.getString(3))
+                                        .setContentUrl(Uri.parse("https://developers.facebook.com/docs/sharing/opengraph/android"))
+                                        .setImageUrl(Uri.parse("https://www.cabq.gov/culturalservices/biopark/images/share-on-facebook.png"))
+                                        //.setImageUrl()
+                                        .build();
+                                fbShareDialog.show(linkContent);
+                            }
                         }
-                        Intent i=new Intent(getApplicationContext(),MainActivity.class);
-                        startActivity(i);
+                        if(optionList[i].equals("Delete")) {
+
+                        }
                     }
                 });
+
+//                builder.setNegativeButton("Cancel",new DialogInterface.OnClickListener(){
+//                    public void onClick (DialogInterface arg0,int arg1)
+//                    {
+//                        // Toast.makeText(getApplicationContext(),"cancel",Toast.LENGTH_SHORT).show();
+//                    }
+//
+//                });
+//
+//                builder.setPositiveButton("OK",new DialogInterface.OnClickListener(){
+//                    public void onClick(DialogInterface arg0,int arg1)
+//                    {
+//                        //Toast.makeText(getApplicationContext(),"ok",Toast.LENGTH_SHORT).show();
+//
+//                        c.moveToPosition(position);
+//                        String id = c.getString(0);
+//                        if(!id.equals("")) {
+//                            sqlDB.delete(TABLE_NAME, ID + "=" + id, null);
+//                        }
+//                        Intent i=new Intent(getApplicationContext(),MainActivity.class);
+//                        startActivity(i);
+//                    }
+//                });
 
                 builder.show();
 

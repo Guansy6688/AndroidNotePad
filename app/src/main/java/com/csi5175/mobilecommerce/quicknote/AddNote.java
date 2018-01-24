@@ -33,6 +33,17 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.FacebookSdk;
+import com.facebook.appevents.AppEventsLogger;
+import com.facebook.login.LoginResult;
+import com.facebook.login.widget.LoginButton;
+import com.facebook.share.model.ShareLinkContent;
+import com.facebook.share.widget.ShareButton;
+import com.facebook.share.widget.ShareDialog;
+
 /**
  * Created by Administrator on 1/16/2018.
  */
@@ -47,7 +58,11 @@ public class AddNote extends AppCompatActivity {
     Button back;
     File phoneFile;
     Uri uri;
-
+    LoginButton fbLoginButton;
+    ShareButton fbShareButton;
+    ImageButton ib;
+    ShareDialog fbShareDialog;
+    CallbackManager fbCallbackManager;
 
     private static final String DATABASE_NAME = "Mydb";
     private static final String TABLE_NAME = "notes";
@@ -63,7 +78,8 @@ public class AddNote extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.note_add);
-
+        FacebookSdk.sdkInitialize(getApplicationContext());
+        AppEventsLogger.activateApp(this);
 
         sqlDB = openOrCreateDatabase(DATABASE_NAME, SQLiteDatabase.CREATE_IF_NECESSARY,null);
         //Toast.makeText(getApplicationContext(),"db open successfully",Toast.LENGTH_SHORT).show();
@@ -108,7 +124,49 @@ public class AddNote extends AppCompatActivity {
         date.setText(getTime());
  //       Toast.makeText(getApplicationContext(),t,Toast.LENGTH_SHORT).show();
 
+        // Facebook Login on QuickNote
+        fbCallbackManager = CallbackManager.Factory.create();
+        fbLoginButton = (LoginButton) findViewById(R.id.login_button);
+        fbLoginButton.setReadPermissions("email, publish_actions");
+        fbLoginButton.registerCallback(fbCallbackManager,
+                new FacebookCallback<LoginResult>() {
+                    @Override
+                    public void onSuccess(LoginResult loginResult) {
+                        // App code
+                    }
 
+                    @Override
+                    public void onCancel() {
+                        // App code
+                    }
+
+                    @Override
+                    public void onError(FacebookException exception) {
+                        // App code
+                    }
+                });
+
+        // Facebook Share on QuickNote
+//        fbShareButton = (ShareButton) findViewById(R.id.share_button);
+        ib = (ImageButton) findViewById(R.id.share_button);
+        fbShareDialog = new ShareDialog(this);
+        ib.setOnClickListener(new Button.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getApplicationContext(),"fb click",Toast.LENGTH_SHORT).show();
+                if(fbShareDialog.canShow(ShareLinkContent.class)) {
+                    ShareLinkContent linkContent = new ShareLinkContent.Builder()
+                            .setContentTitle(title.getText().toString())
+                            .setContentDescription(context.getText().toString())
+                            .setContentUrl(Uri.parse("https://developers.facebook.com/docs/sharing/opengraph/android"))
+                            .setImageUrl(Uri.parse("https://www.cabq.gov/culturalservices/biopark/images/share-on-facebook.png"))
+                            //.setImageUrl()
+                            .build();
+                    fbShareDialog.show(linkContent);
+                }
+                Toast.makeText(getApplicationContext(),"fb finish",Toast.LENGTH_SHORT).show();
+            }
+        });
 
         imgbtn = (ImageButton)findViewById(R.id.imageButton3);
         imgbtn.setOnClickListener(new Button.OnClickListener() {
