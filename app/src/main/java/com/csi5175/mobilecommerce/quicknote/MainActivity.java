@@ -147,8 +147,9 @@ public class MainActivity extends AppCompatActivity {
                         if(optionList[i].equals("Share on Facebook")) {
                             if(fbShareDialog.canShow(ShareLinkContent.class)) {
                                 ShareLinkContent linkContent = new ShareLinkContent.Builder()
-                                        .setContentTitle(c.getString(1))
-                                        .setContentDescription(c.getString(3))
+                                        .setQuote(c.getString(1) + "\n\n" + c.getString(3))
+//                                        .setContentTitle(c.getString(1))
+//                                        .setContentDescription(c.getString(3))
                                         .setContentUrl(Uri.parse("https://developers.facebook.com/docs/sharing/opengraph/android"))
                                         .setImageUrl(Uri.parse("https://www.cabq.gov/culturalservices/biopark/images/share-on-facebook.png"))
                                         //.setImageUrl()
@@ -157,7 +158,13 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
                         if(optionList[i].equals("Delete")) {
-
+                            c.moveToPosition(position);
+                            String id = c.getString(0);
+                            if(!id.equals("")) {
+                                sqlDB.delete(TABLE_NAME, ID + "=" + id, null);
+                            }
+                            Intent intent=new Intent(getApplicationContext(),MainActivity.class);
+                            startActivity(intent);
                         }
                     }
                 });

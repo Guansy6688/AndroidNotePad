@@ -124,28 +124,6 @@ public class AddNote extends AppCompatActivity {
         date.setText(getTime());
  //       Toast.makeText(getApplicationContext(),t,Toast.LENGTH_SHORT).show();
 
-        // Facebook Login on QuickNote
-        fbCallbackManager = CallbackManager.Factory.create();
-        fbLoginButton = (LoginButton) findViewById(R.id.login_button);
-        fbLoginButton.setReadPermissions("email, publish_actions");
-        fbLoginButton.registerCallback(fbCallbackManager,
-                new FacebookCallback<LoginResult>() {
-                    @Override
-                    public void onSuccess(LoginResult loginResult) {
-                        // App code
-                    }
-
-                    @Override
-                    public void onCancel() {
-                        // App code
-                    }
-
-                    @Override
-                    public void onError(FacebookException exception) {
-                        // App code
-                    }
-                });
-
         // Facebook Share on QuickNote
 //        fbShareButton = (ShareButton) findViewById(R.id.share_button);
         ib = (ImageButton) findViewById(R.id.share_button);
@@ -153,18 +131,15 @@ public class AddNote extends AppCompatActivity {
         ib.setOnClickListener(new Button.OnClickListener(){
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(),"fb click",Toast.LENGTH_SHORT).show();
                 if(fbShareDialog.canShow(ShareLinkContent.class)) {
                     ShareLinkContent linkContent = new ShareLinkContent.Builder()
-                            .setContentTitle(title.getText().toString())
-                            .setContentDescription(context.getText().toString())
+                            .setQuote(title.getText().toString() + "\n\n" + context.getText().toString())
                             .setContentUrl(Uri.parse("https://developers.facebook.com/docs/sharing/opengraph/android"))
                             .setImageUrl(Uri.parse("https://www.cabq.gov/culturalservices/biopark/images/share-on-facebook.png"))
                             //.setImageUrl()
                             .build();
                     fbShareDialog.show(linkContent);
                 }
-                Toast.makeText(getApplicationContext(),"fb finish",Toast.LENGTH_SHORT).show();
             }
         });
 
