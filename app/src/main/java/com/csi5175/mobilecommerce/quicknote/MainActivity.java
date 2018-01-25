@@ -9,11 +9,13 @@ import android.net.Uri;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.CursorAdapter;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.SearchView;
 import android.widget.SimpleCursorAdapter;
 
 import com.facebook.share.model.ShareLinkContent;
@@ -31,6 +33,8 @@ import com.facebook.share.widget.ShareDialog;
 public class MainActivity extends AppCompatActivity {
     ImageButton add;
     public ListView listView;
+    private SearchView searchView;
+    private SimpleCursorAdapter listAdapter;
 //    LoginButton fbLoginButton;
 //    ShareButton fbShareButton;
     ShareDialog fbShareDialog;
@@ -43,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String PATH = "path";
     public static final String TIME = "time";
     private SQLiteDatabase sqlDB;
+    private Cursor c;
 
     @SuppressLint("WrongConstant")
     @Override
@@ -53,7 +58,12 @@ public class MainActivity extends AppCompatActivity {
         AppEventsLogger.activateApp(this);
 
         sqlDB = openOrCreateDatabase(DATABASE_NAME, SQLiteDatabase.CREATE_IF_NECESSARY,null);
-        //Toast.makeText(getApplicationContext(),"db open successfully",Toast.LENGTH_SHORT).show();
+
+        c = sqlDB.query(TABLE_NAME, null, null, null, null, null, null);
+        listView = (ListView) findViewById(R.id.listview);
+        listView.setAdapter(RefreshAdapter(c));
+        listView.invalidateViews();
+
         try {
             //sqlDB.execSQL("create table " + TABLE_NAME + " (_id text,title text  ,time text, context text)");
             sqlDB.execSQL("CREATE TABLE " + TABLE_NAME + " (" + ID
@@ -65,21 +75,34 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
+        searchView = (SearchView) findViewById(R.id.searchView);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
 
-        final Cursor c = sqlDB.query(TABLE_NAME, null, null, null, null, null, null);
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (!TextUtils.isEmpty(newText)){
 
-        final SimpleCursorAdapter listAdapter = new SimpleCursorAdapter(this,
-                R.layout.listview_detail,
-                c,
-                new String[]{"title", "time"},
-                new int[]{R.id.title1, R.id.time1},
-                CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+                    // listView.setFilterText(newText);
+                    //cursor = sqlDB.query(TABLE_NAME, null, null, null, null, null, null);
+                    c = sqlDB.rawQuery("SELECT * FROM notes WHERE TITLE LIKE '%" + newText + "%' OR CONTENT LIKE '%" + newText + "%'", null);
+                    listView = (ListView) findViewById(R.id.listview);
+                    listView.setAdapter(RefreshAdapter(c));
+                    listView.invalidateViews();
+                }else{
 
-        listView = (ListView) findViewById(R.id.listview);
-        listView.setAdapter(listAdapter);
-
-        listView.invalidateViews();
-
+                    //  listView.clearTextFilter();
+                    c= sqlDB.query(TABLE_NAME, null, null, null, null, null, null);
+                    listView = (ListView) findViewById(R.id.listview);
+                    listView.setAdapter(RefreshAdapter(c));
+                    listView.invalidateViews();
+                }
+                return false;
+            }
+        });
 
         //enter add note page
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -210,6 +233,16 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    private SimpleCursorAdapter RefreshAdapter(Cursor c){
+        SimpleCursorAdapter listAdapter = new SimpleCursorAdapter(this,
+                R.layout.listview_detail,
+                c,
+                new String[]{"title", "time"},
+                new int[]{R.id.title1, R.id.time1},
+                CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+        return  listAdapter;
     }
 }
 

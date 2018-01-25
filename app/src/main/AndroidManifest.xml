@@ -16,16 +16,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <provider
-            android:name="android.support.v4.content.FileProvider"
-            android:authorities="${applicationId}.android7.fileprovider"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/provider_paths" />
-        </provider>
-
         <provider android:authorities="com.facebook.app.FacebookContentProvider{155908015191634}"
             android:name="com.facebook.FacebookContentProvider"
             android:exported="true"/>
@@ -38,8 +28,6 @@
             </intent-filter>
         </activity>
         <activity android:name=".AddNote">
-        </activity>
-        <activity android:name=".DetailNote">
         </activity>
 
         <meta-data android:name="com.facebook.sdk.ApplicationId"
