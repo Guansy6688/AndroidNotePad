@@ -11,6 +11,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.widget.RemoteViews;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;

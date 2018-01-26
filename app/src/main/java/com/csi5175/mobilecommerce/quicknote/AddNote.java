@@ -3,7 +3,9 @@ package com.csi5175.mobilecommerce.quicknote;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -78,6 +80,8 @@ public class AddNote extends AppCompatActivity {
     public static final String CONTENT = "content";
     public static final String PATH = "path";
     public static final String TIME = "time";
+    public static final Integer CONTENT_MAXLINE = 18;
+    public static final Integer CONTENT_MINLINE = 3;
 
     @SuppressLint("WrongConstant")
     @Override
@@ -96,7 +100,7 @@ public class AddNote extends AppCompatActivity {
                     + TIME+ " TEXT NOT NULL,"+ CONTENT + " TEXT NOT NULL,"
                     + PATH + " TEXT)");
         }catch(Exception e){
-            // Toast.makeText(getApplicationContext(),"表格已经存在",Toast.LENGTH_SHORT).show();
+            // Toast.makeText(getApplicationContext(),"table exist",Toast.LENGTH_SHORT).show();
         }
 
 
@@ -108,29 +112,28 @@ public class AddNote extends AppCompatActivity {
 
         Intent i = getIntent();
         final String idString = i.getStringExtra(ID);
-        Toast.makeText(getApplicationContext(),idString,Toast.LENGTH_SHORT).show();
 
         if(i.getStringExtra(TITLE)!=null){
             String titleString = i.getStringExtra(TITLE);
 //    String timec = i.getStringExtra(TIME);
+            String pathString = i.getStringExtra(PATH);
             String contextString = i.getStringExtra(CONTENT);
             title.setText(titleString);
             context.setText(contextString);
 
-            if (i.getStringExtra(PATH)==null) {
+            if (i.getStringExtra(PATH).equals("null")) {
                 img.setVisibility(View.GONE);
-             //   context.setMaxLines(8);
+                context.setMaxLines(CONTENT_MAXLINE);
             } else {
                 img.setVisibility(View.VISIBLE);
                 Bitmap bitmap = BitmapFactory.decodeFile(i.getStringExtra(
                         PATH));
                 img.setImageBitmap(bitmap);
-               // context.setMaxLines(3);
+                context.setMaxLines(CONTENT_MINLINE);
             }
         }
 
         date.setText(getTime());
- //       Toast.makeText(getApplicationContext(),t,Toast.LENGTH_SHORT).show();
 
         // Facebook Share on QuickNote
 //        fbShareButton = (ShareButton) findViewById(R.id.share_button);
@@ -201,7 +204,37 @@ public class AddNote extends AppCompatActivity {
             }
         });
 
+        img.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(AddNote.this);
 
+                builder.setTitle("Warning");
+                builder.setMessage("Do you want to delete this picture?");
+                builder.setPositiveButton("OK",new DialogInterface.OnClickListener(){
+                    public void onClick(DialogInterface arg0,int arg1)
+                    {
+                        img.setVisibility(View.GONE);
+                        context.setMaxLines(CONTENT_MAXLINE);
+                        if(phoneFile!=null){
+                            if(phoneFile.exists()){
+                                phoneFile.delete();
+                            }
+                        }
+
+
+                    }
+                });
+
+                builder.setNegativeButton("Cancel",new DialogInterface.OnClickListener(){
+                    public void onClick (DialogInterface arg0,int arg1)
+                    {
+                    }
+
+                });
+                builder.show();
+            }
+        });
 
         back=(Button)findViewById(R.id.button6);
         back.setOnClickListener(new Button.OnClickListener() {
@@ -226,7 +259,11 @@ public class AddNote extends AppCompatActivity {
                     cv.put(TITLE, titleString);
                     cv.put(TIME, timeString);
                     cv.put(CONTENT, contextString);
-                    cv.put(PATH, phoneFile + "");
+                    if(img.getVisibility()==View.VISIBLE && phoneFile == null){
+
+                    }else{
+                        cv.put(PATH, phoneFile + "");
+                    }
 
                     if(idString==null) {
                         sqlDB.insertOrThrow(TABLE_NAME,null,cv);
@@ -271,7 +308,6 @@ public class AddNote extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Toast.makeText(getApplicationContext(),requestCode+"hhh",Toast.LENGTH_SHORT).show();
 
         switch (requestCode){
 
@@ -289,8 +325,9 @@ public class AddNote extends AppCompatActivity {
                 break;
             //camera
             case 1:
-                Toast.makeText(getApplicationContext(),phoneFile.getAbsolutePath(),Toast.LENGTH_SHORT).show();
                 if(resultCode == RESULT_OK){
+                    img.setVisibility(View.VISIBLE);
+                    context.setMaxLines(3);
                     ShowImage(phoneFile.getAbsolutePath());
                 }
                 break;
