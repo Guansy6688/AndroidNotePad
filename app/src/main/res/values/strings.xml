@@ -2,4 +2,6 @@
     <string name="app_name">QuickNote</string>
     <string name="facebook_app_id">155908015191634</string>
     <string name="fb_login_protocol_scheme">fb155908015191634</string>
+    <string name="appwidget_text">EXAMPLE</string>
+    <string name="add_widget">Add widget</string>
 </resources>

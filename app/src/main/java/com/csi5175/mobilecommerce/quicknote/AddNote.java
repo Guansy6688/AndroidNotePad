@@ -7,6 +7,7 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -17,12 +18,15 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -56,6 +60,8 @@ public class AddNote extends AppCompatActivity {
     ImageView img;
     ImageButton imgbtn;
     Button back;
+    PopupMenu popupMenu;
+    Menu menu;
     File phoneFile;
     Uri uri;
     LoginButton fbLoginButton;
@@ -113,11 +119,13 @@ public class AddNote extends AppCompatActivity {
 
             if (i.getStringExtra(PATH)==null) {
                 img.setVisibility(View.GONE);
+             //   context.setMaxLines(8);
             } else {
                 img.setVisibility(View.VISIBLE);
                 Bitmap bitmap = BitmapFactory.decodeFile(i.getStringExtra(
                         PATH));
                 img.setImageBitmap(bitmap);
+               // context.setMaxLines(3);
             }
         }
 
@@ -143,36 +151,53 @@ public class AddNote extends AppCompatActivity {
             }
         });
 
-        imgbtn = (ImageButton)findViewById(R.id.imageButton3);
-        imgbtn.setOnClickListener(new Button.OnClickListener() {
+        popupMenu = new PopupMenu(this, findViewById(R.id.imageButton3));
+        menu = popupMenu.getMenu();
+        menu.add(Menu.NONE,Menu.FIRST + 0, 0 , "choose from gallery");
+        menu.add(Menu.NONE,Menu.FIRST + 1, 1 , "take a picture");
+
+        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
-            public void onClick(View v) {
-                img.setVisibility(View.VISIBLE);
+            public boolean onMenuItemClick(MenuItem menuItem) {
+                switch (menuItem.getItemId()) {
+                    case Menu.FIRST + 0:
+                        //choose a picture from gallery
+//                    Intent galleryIntent = new Intent(Intent.ACTION_PICK);
+//                    galleryIntent.setType("image/*");
+//                    galleryIntent.putExtra("return-data",true);
+                        Intent galleryIntent = new Intent(Intent.ACTION_PICK,
+                                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                        startActivityForResult(galleryIntent, 2);
+                        break;
+                    case Menu.FIRST + 1:
+                        //take a picture
+                        Intent imgIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                        phoneFile = new File(Environment.getExternalStorageDirectory()
+                                .getAbsoluteFile() + "/" + getImgTime() + ".jpg");
+                        ContentValues contentValues = new ContentValues(1);
+                        contentValues.put(MediaStore.Images.Media.DATA, phoneFile.getAbsolutePath());
 
-                                Intent imgIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                phoneFile = new File(Environment.getExternalStorageDirectory()
-                        .getAbsoluteFile() + "/" + getImgTime() + ".jpg");
-              //  imgIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(phoneFile));
-                ContentValues contentValues = new ContentValues(1);
-                contentValues.put(MediaStore.Images.Media.DATA, phoneFile.getAbsolutePath());
+                        if(ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+                                PackageManager.PERMISSION_GRANTED){
+                            ActivityCompat.requestPermissions(AddNote.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
+                        }
 
-                if(ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
-                        PackageManager.PERMISSION_GRANTED){
-                    ActivityCompat.requestPermissions(AddNote.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
+
+                        uri = getApplication().getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
+                        List<ResolveInfo> resInfoList = getPackageManager()
+                                .queryIntentActivities(imgIntent, PackageManager.MATCH_DEFAULT_ONLY);
+                        for (ResolveInfo resolveInfo : resInfoList) {
+                            String packageName = resolveInfo.activityInfo.packageName;
+                            grantUriPermission(packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                    | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                        }
+                        imgIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+                        startActivityForResult(imgIntent, 1);
+                        break;
+                    default:
+                        break;
                 }
-
-
-                 uri = getApplication().getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
-                                    List<ResolveInfo> resInfoList = getPackageManager()
-                            .queryIntentActivities(imgIntent, PackageManager.MATCH_DEFAULT_ONLY);
-                    for (ResolveInfo resolveInfo : resInfoList) {
-                        String packageName = resolveInfo.activityInfo.packageName;
-                        grantUriPermission(packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
-                                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                    }
-                imgIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
-                startActivityForResult(imgIntent, 1);
-
+                return false;
             }
         });
 
@@ -239,16 +264,42 @@ public class AddNote extends AppCompatActivity {
         return t;
     }
 
+    public void popupmenu(View v) {
+        popupMenu.show();
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        Toast.makeText(getApplicationContext(),requestCode+"hhh",Toast.LENGTH_SHORT).show();
 
-        if (requestCode == 1) {
-            Toast.makeText(getApplicationContext(),phoneFile.getAbsolutePath(),Toast.LENGTH_SHORT).show();
+        switch (requestCode){
 
-            Bitmap bitmap = BitmapFactory.decodeFile(phoneFile
-                    .getAbsolutePath());
-            img.setImageBitmap(bitmap);
+            //gallery
+            case 2:
+                if(resultCode == RESULT_OK && data != null){
+                    Uri selectedImage = data.getData();
+                    String[] filePathColumns = {MediaStore.Images.Media.DATA};
+                    Cursor imgcursor = getContentResolver().query(selectedImage, filePathColumns, null, null, null);
+                    imgcursor.moveToFirst();
+                    int columnIndex = imgcursor.getColumnIndex(filePathColumns[0]);
+                    String imagePath = imgcursor.getString(columnIndex);
+                    ShowImage(imagePath);
+                }
+                break;
+            //camera
+            case 1:
+                Toast.makeText(getApplicationContext(),phoneFile.getAbsolutePath(),Toast.LENGTH_SHORT).show();
+                if(resultCode == RESULT_OK){
+                    ShowImage(phoneFile.getAbsolutePath());
+                }
+                break;
         }
+    }
+
+    //show image according to path
+    private void ShowImage(String imgPath){
+        Bitmap bitmap = BitmapFactory.decodeFile(imgPath);
+        img.setImageBitmap(bitmap);
     }
 }
