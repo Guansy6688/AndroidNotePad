@@ -302,4 +302,11 @@ public class AddNote extends AppCompatActivity {
         Bitmap bitmap = BitmapFactory.decodeFile(imgPath);
         img.setImageBitmap(bitmap);
     }
+
+    @Override
+    protected void onDestroy() {
+        // TODO Auto-generated method stub
+        super.onDestroy();
+        sqlDB.close();
+    }
 }

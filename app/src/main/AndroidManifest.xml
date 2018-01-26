@@ -51,6 +51,7 @@
 
         <receiver android:name=".NewAppWidget">
             <intent-filter>
+                <action android:name="com.csi5175.mobilecommerce.quicknote.action.CHANGE_IMAGE"/>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
 
@@ -58,6 +59,11 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/new_app_widget_info" />
         </receiver>
+
+        <service android:name=".ListViewService"
+            android:permission="android.permission.BIND_REMOTEVIEWS"
+            android:exported="false"
+            android:enabled="true"/>
     </application>
 
 </manifest>

@@ -244,5 +244,12 @@ public class MainActivity extends AppCompatActivity {
                 CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
         return  listAdapter;
     }
+
+    @Override
+    protected void onDestroy() {
+        // TODO Auto-generated method stub
+        super.onDestroy();
+        sqlDB.close();
+    }
 }
 

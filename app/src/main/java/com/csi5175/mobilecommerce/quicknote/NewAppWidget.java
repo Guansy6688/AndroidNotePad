@@ -1,32 +1,61 @@
 package com.csi5175.mobilecommerce.quicknote;
 
+import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.os.Bundle;
+import android.text.TextUtils;
 import android.widget.RemoteViews;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Implementation of App Widget functionality.
  */
 public class NewAppWidget extends AppWidgetProvider {
+    public static final String CHANGE_IMAGE = "com.csi5175.mobilecommerce.quicknote.action.CHANGE_IMAGE";
+    private RemoteViews mRemoteViews;
+    private ComponentName mComponentName;
 
-    static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
-                                int appWidgetId) {
-
-        CharSequence widgetText = context.getString(R.string.appwidget_text);
-        // Construct the RemoteViews object
-        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.new_app_widget);
-        views.setTextViewText(R.id.appwidget_text, widgetText);
-
-        // Instruct the widget manager to update the widget
-        appWidgetManager.updateAppWidget(appWidgetId, views);
-    }
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
-        // There may be multiple widgets active, so update all of them
-        for (int appWidgetId : appWidgetIds) {
-            updateAppWidget(context, appWidgetManager, appWidgetId);
+        mRemoteViews = new RemoteViews(context.getPackageName(), R.layout.new_app_widget);
+        mRemoteViews.setTextViewText(R.id.btn_test, "to Note");
+        Intent skipIntent = new Intent(context, MainActivity.class);
+        PendingIntent pi = PendingIntent.getActivity(context, 200, skipIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+        mRemoteViews.setOnClickPendingIntent(R.id.btn_test, pi);
+
+        Intent lvIntent = new Intent(context, ListViewService.class);
+        mRemoteViews.setRemoteAdapter(R.id.lv_test, lvIntent);
+        mRemoteViews.setEmptyView(R.id.lv_test,android.R.id.empty);
+
+
+        Intent toIntent = new Intent(CHANGE_IMAGE);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 200, toIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        mRemoteViews.setPendingIntentTemplate(R.id.lv_test, pendingIntent);
+
+
+        mComponentName = new ComponentName(context, NewAppWidget.class);
+        appWidgetManager.updateAppWidget(mComponentName, mRemoteViews);
+    }
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        super.onReceive(context, intent);
+        if(TextUtils.equals(CHANGE_IMAGE,intent.getAction())){
+            Bundle extras = intent.getExtras();
+            String content = extras.getString(ListViewService.INITENT_DATA);
+            mRemoteViews = new RemoteViews(context.getPackageName(), R.layout.new_app_widget);
+            mRemoteViews.setTextViewText(R.id.tv_test, content);
+            mComponentName = new ComponentName(context, NewAppWidget.class);
+            AppWidgetManager.getInstance(context).updateAppWidget(mComponentName, mRemoteViews);
         }
     }
 
