@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Administrator on 1/25/2018.
+ * Implementation of ListView Service.
  */
 
 public class ListViewService extends RemoteViewsService {
@@ -32,9 +32,7 @@ public class ListViewService extends RemoteViewsService {
     }
 
     private class ListRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactory {
-
         private Context mContext;
-
         private List<String> titleList = new ArrayList<>();
         private List<String> contentList = new ArrayList<>();
 
@@ -44,9 +42,11 @@ public class ListViewService extends RemoteViewsService {
         @SuppressLint("WrongConstant")
         @Override
         public void onCreate() {
+            // Create or open database
             sqlDB = openOrCreateDatabase(DATABASE_NAME, SQLiteDatabase.CREATE_IF_NECESSARY,null);
             Cursor c = sqlDB.query(TABLE_NAME, null, null, null, null, null, null);
             while(c.moveToNext()){
+                // Initialize lists
                 titleList.add(c.getString(c.getColumnIndex("title")));
                 contentList.add(c.getString(c.getColumnIndex("content")));
             }
@@ -60,6 +60,7 @@ public class ListViewService extends RemoteViewsService {
             sqlDB = openOrCreateDatabase(DATABASE_NAME, SQLiteDatabase.CREATE_IF_NECESSARY,null);
             Cursor c = sqlDB.query(TABLE_NAME, null, null, null, null, null, null);
             while(c.moveToNext()){
+                // Update lists
                 titleList.add(c.getString(c.getColumnIndex("title")));
                 contentList.add(c.getString(c.getColumnIndex("content")));
             }
@@ -84,7 +85,6 @@ public class ListViewService extends RemoteViewsService {
 
             Bundle extras = new Bundle();
             extras.putString(ListViewService.INITENT_DATA, contentList.get(position));
-       //     extras.putInt(ListViewService.INITENT_DATA, position);
             Intent changeIntent = new Intent();
             changeIntent.setAction(NewAppWidget.CHANGE_IMAGE);
             changeIntent.putExtras(extras);
